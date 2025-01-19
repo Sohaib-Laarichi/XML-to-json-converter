@@ -1,0 +1,59 @@
+options {
+    STATIC = false;
+}
+
+PARSER_BEGIN(XMLParser)
+package com.example.xmltojson.javacc;
+
+import java.util.*;
+import java.io.*;
+
+public class XMLParser {
+    public static void main(String[] args) throws ParseException {
+        XMLParser parser = new XMLParser(System.in);
+        parser.parse();
+    }
+}
+PARSER_END(XMLParser)
+
+SKIP : {
+    " " | "\t" | "\n" | "\r"
+}
+
+TOKEN : {
+    <OPEN_TAG: "<"> | <CLOSE_TAG: ">"> | <SLASH: "/"> | <EQUALS: "="> | <QUOTE: "\"">
+}
+
+TOKEN : {
+    <TAG_NAME: (["a"-"z","A"-"Z"])+> | <ATTRIBUTE_NAME: (["a"-"z","A"-"Z"])+> | <VALUE: (~["\""])*>
+}
+
+void parse() :
+{}
+{
+    element() <EOF>
+}
+
+void element() :
+{}
+{
+    <OPEN_TAG> <TAG_NAME> (attribute())* (<CLOSE_TAG> content() <OPEN_TAG> <SLASH> <TAG_NAME> <CLOSE_TAG> | <SLASH> <CLOSE_TAG>)
+}
+
+void attribute() :
+{}
+{
+    <ATTRIBUTE_NAME> <EQUALS> <QUOTE> <VALUE> <QUOTE>
+}
+
+void content() :
+{}
+{
+    (element() | text())*
+}
+
+void text() :
+{}
+{
+    <VALUE>
+}

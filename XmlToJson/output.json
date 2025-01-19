@@ -1,0 +1,20 @@
+{
+  "biblio": {
+    "livre": [
+      {
+        "numero": "123",
+        "titre": "Le Petit Prince",
+        "auteur": "Saint-Exupery",
+        "editeur": "Gallimard",
+        "prix": "15"
+      },
+      {
+        "numero": "124",
+        "titre": "1984",
+        "auteur": "George Orwell",
+        "editeur": "Gallimard",
+        "prix": "20"
+      }
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>XMLtoJSONConverter</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>XMLtoJSONConverter</name>
+
+  <dependencies>
+    <!-- Pour JSON -->
+    <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20231013</version>
+    </dependency>
+    <!-- Dépendance JavaCC -->
+    <dependency>
+        <groupId>net.java.dev.javacc</groupId>
+        <artifactId>javacc</artifactId>
+        <version>7.0.10</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+        <!-- Plugin JavaCC -->
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>javacc-maven-plugin</artifactId>
+            <version>2.6</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>javacc</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <sourceDirectory>${basedir}/src/main/javacc</sourceDirectory>
+                <outputDirectory>${project.build.directory}/generated-sources/javacc</outputDirectory>
+            </configuration>
+        </plugin>
+
+        <!-- Plugin pour inclure les sources générées -->
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>3.3.0</version>
+            <executions>
+                <execution>
+                    <id>add-source</id>
+                    <phase>generate-sources</phase>
+                    <goals>
+                        <goal>add-source</goal>
+                    </goals>
+                    <configuration>
+                        <sources>
+                            <source>${project.build.directory}/generated-sources/javacc</source>
+                        </sources>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+
+        <!-- Plugin pour configurer le compilateur Java -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.11.0</version>
+            <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+            </configuration>
+        </plugin>
+
+        <!-- Plugin pour nettoyer les fichiers générés -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-clean-plugin</artifactId>
+            <version>3.3.2</version>
+            <configuration>
+                <filesets>
+                    <fileset>
+                        <directory>${project.build.directory}/generated-sources/javacc</directory>
+                        <includes>
+                            <include>**/*</include>
+                        </includes>
+                    </fileset>
+                </filesets>
+            </configuration>
+        </plugin>
+    </plugins>
+  </build>
+</project>

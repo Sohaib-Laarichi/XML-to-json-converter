@@ -1,0 +1,13 @@
+{
+  "biblio": {
+    "livre": [
+      {
+        "numero": "1",
+        "titre": "Mon titre",
+        "auteur": "Auteur",
+        "editeur": "Editeur",
+        "prix": "29"
+      }
+    ]
+  }
+}

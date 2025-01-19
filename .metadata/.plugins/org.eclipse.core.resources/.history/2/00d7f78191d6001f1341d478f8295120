@@ -1,0 +1,34 @@
+package com.example;
+
+import com.example.parser.XMLParser;
+import org.json.JSONObject;
+
+import java.io.FileInputStream;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Bienvenue dans le convertisseur XML vers JSON !");
+        System.out.print("Veuillez entrer le chemin du fichier XML : ");
+        String filePath = scanner.nextLine();
+
+        try {
+            // Créer une instance du parseur XML
+            XMLParser parser = new XMLParser(new FileInputStream(filePath));
+
+            // Convertir le XML en JSON
+            JSONObject json = parser.parse();
+
+            // Afficher le résultat JSON
+            System.out.println("\nRésultat JSON :");
+            System.out.println(json.toString(2)); // Affiche le JSON formaté avec une indentation de 2 espaces
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la conversion du fichier XML :");
+            e.printStackTrace();
+        } finally {
+            scanner.close();
+        }
+    }
+}

@@ -1,0 +1,81 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>XMLtoJSONConverter</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>XMLtoJSONConverter</name>
+
+  <dependencies>
+    <!-- Pour JSON -->
+    <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20231013</version>
+    </dependency>
+      <!-- Dépendance JavaCC -->
+    <dependency>
+        <groupId>net.java.dev.javacc</groupId>
+        <artifactId>javacc</artifactId>
+        <version>7.0.10</version>
+    </dependency>
+
+    <!-- Pour XML (pour Java 8 ou plus ancien) -->
+  </dependencies>
+ 
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>javacc-maven-plugin</artifactId>
+            <version>2.6</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>javacc</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <sourceDirectory>${basedir}/src/main/javacc</sourceDirectory>
+                <outputDirectory>${project.build.directory}/generated-sources/javacc</outputDirectory>
+            </configuration>
+        </plugin>
+    </plugins>
+    <pluginManagement>
+    	<plugins>
+    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+    		<plugin>
+    			<groupId>org.eclipse.m2e</groupId>
+    			<artifactId>lifecycle-mapping</artifactId>
+    			<version>1.0.0</version>
+    			<configuration>
+    				<lifecycleMappingMetadata>
+    					<pluginExecutions>
+    						<pluginExecution>
+    							<pluginExecutionFilter>
+    								<groupId>org.codehaus.mojo</groupId>
+    								<artifactId>
+    									javacc-maven-plugin
+    								</artifactId>
+    								<versionRange>[2.6,)</versionRange>
+    								<goals>
+    									<goal>javacc</goal>
+    								</goals>
+    							</pluginExecutionFilter>
+    							<action>
+    								<ignore></ignore>
+    							</action>
+    						</pluginExecution>
+    					</pluginExecutions>
+    				</lifecycleMappingMetadata>
+    			</configuration>
+    		</plugin>
+    	</plugins>
+    </pluginManagement>
+</build>
+
+
+</project>

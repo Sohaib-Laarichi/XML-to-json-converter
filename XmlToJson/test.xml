@@ -1,0 +1,16 @@
+<biblio>
+<livre>
+<numero>123</numero>
+<titre>Le Petit Prince</titre>
+<auteur>Saint-Exupery</auteur>
+<editeur>Gallimard</editeur>
+<prix>15</prix>
+</livre>
+<livre>
+<numero>124</numero>
+<titre>1984</titre>
+<auteur>George Orwell</auteur>
+<editeur>Gallimard</editeur>
+<prix>20</prix>
+</livre>
+</biblio>

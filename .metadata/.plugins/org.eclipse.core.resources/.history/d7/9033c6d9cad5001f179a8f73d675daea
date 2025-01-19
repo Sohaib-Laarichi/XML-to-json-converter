@@ -1,0 +1,133 @@
+
+package com.example.xmltojson.model;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+
+public class XMLParser {
+
+    /**
+     * Parse un fichier XML et le convertit en une chaîne JSON.
+     *
+     * @param xmlFile Le fichier XML à parser.
+     * @return Une chaîne JSON représentant le contenu du fichier XML.
+     * @throws Exception Si une erreur survient lors du parsing du fichier XML.
+     */
+    public String parseXMLToJSON(File xmlFile) throws Exception {
+        // Créer un parseur de document XML
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(xmlFile);
+        document.getDocumentElement().normalize();
+
+        // Convertir l'élément racine en JSON
+        Element root = document.getDocumentElement();
+        Map<String, Object> jsonMap = new HashMap<>();
+        jsonMap.put(root.getNodeName(), parseElement(root));
+
+        return convertMapToJSON(jsonMap);
+    }
+
+    /**
+     * Parse un élément XML et le convertit en une structure de données Java (Map ou List).
+     *
+     * @param element L'élément XML à parser.
+     * @return Une Map ou une List représentant l'élément XML.
+     */
+    private Object parseElement(Element element) {
+        Map<String, Object> elementMap = new HashMap<>();
+        NodeList children = element.getChildNodes();
+
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                // Si le nœud est un élément, on le parse récursivement
+                Element childElement = (Element) node;
+                String nodeName = childElement.getNodeName();
+                if (elementMap.containsKey(nodeName)) {
+                    // Si la clé existe déjà, on convertit la valeur en liste
+                    Object existingValue = elementMap.get(nodeName);
+                    if (existingValue instanceof List) {
+                        ((List<Object>) existingValue).add(parseElement(childElement));
+                    } else {
+                        List<Object> list = new ArrayList<>();
+                        list.add(existingValue);
+                        list.add(parseElement(childElement));
+                        elementMap.put(nodeName, list);
+                    }
+                } else {
+                    // Sinon, on ajoute directement la valeur
+                    elementMap.put(nodeName, parseElement(childElement));
+                }
+            } else if (node.getNodeType() == Node.TEXT_NODE && !node.getTextContent().trim().isEmpty()) {
+                // Si le nœud est un texte, on retourne son contenu
+                return node.getTextContent().trim();
+            }
+        }
+
+        return elementMap;
+    }
+
+    /**
+     * Convertit une Map en une chaîne JSON.
+     *
+     * @param map La Map à convertir.
+     * @return Une chaîne JSON représentant la Map.
+     */
+    private String convertMapToJSON(Map<String, Object> map) {
+        StringBuilder json = new StringBuilder("{");
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            json.append("\"").append(entry.getKey()).append("\":");
+            if (entry.getValue() instanceof Map) {
+                // Si la valeur est une Map, on la convertit récursivement
+                json.append(convertMapToJSON((Map<String, Object>) entry.getValue()));
+            } else if (entry.getValue() instanceof List) {
+                // Si la valeur est une List, on la convertit en JSON
+                json.append(convertListToJSON((List<Object>) entry.getValue()));
+            } else {
+                // Sinon, on ajoute la valeur directement
+                json.append("\"").append(entry.getValue()).append("\"");
+            }
+            json.append(",");
+        }
+        if (json.charAt(json.length() - 1) == ',') {
+            json.deleteCharAt(json.length() - 1); // Supprimer la virgule finale
+        }
+        json.append("}");
+        return json.toString();
+    }
+
+    /**
+     * Convertit une List en une chaîne JSON.
+     *
+     * @param list La List à convertir.
+     * @return Une chaîne JSON représentant la List.
+     */
+    private String convertListToJSON(List<Object> list) {
+        StringBuilder json = new StringBuilder("[");
+        for (Object item : list) {
+            if (item instanceof Map) {
+                // Si l'élément est une Map, on la convertit récursivement
+                json.append(convertMapToJSON((Map<String, Object>) item));
+            } else {
+                // Sinon, on ajoute l'élément directement
+                json.append("\"").append(item).append("\"");
+            }
+            json.append(",");
+        }
+        if (json.charAt(json.length() - 1) == ',') {
+            json.deleteCharAt(json.length() - 1); // Supprimer la virgule finale
+        }
+        json.append("]");
+        return json.toString();
+    }
+}

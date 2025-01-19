@@ -1,0 +1,164 @@
+options {
+    STATIC = false;
+    JAVA_UNICODE_ESCAPE = true;
+    UNICODE_INPUT = true;
+}
+
+PARSER_BEGIN(XMLParser)
+package com.example.parser;
+
+import java.io.*;
+import org.json.*;
+
+public class XMLParser {
+    // Main method to test the parser
+    public static void main(String[] args) {
+        if (args.length < 1) {
+            System.err.println("Usage: java com.example.parser.XMLParser <file.xml>");
+            return;
+        }
+
+        try {
+            XMLParser parser = new XMLParser(new FileInputStream(args[0]));
+            JSONObject json = parser.parse();
+            System.out.println(json.toString(2)); // Print formatted JSON
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to start parsing
+    public JSONObject parse() throws ParseException {
+        return document();
+    }
+}
+PARSER_END(XMLParser)
+
+// Token definitions
+SKIP : { " " | "\t" | "\n" | "\r" | "\r\n" | "\u00a0" } // Skip spaces, tabs, newlines, and non-breaking spaces
+
+TOKEN : {
+  
+   <NAME: (["a"-"z","A"-"Z","0"-"9","_", ":", "-", "."])+ >
+  | <VALUE: "\"" (["\""])* "\"" | "'" (["'"])* "'" >
+  | <EQUALS: "=" >
+  | <OPEN_TAG: "<" >
+  | <CLOSE_TAG: ">" >
+  | <OPEN_CLOSE_TAG: "</" >
+  | <SELF_CLOSE_TAG: "/>" >
+  | <TEXT: (~["<", ">" ,"\r", "\n", "\t", "\u00a0"])* > // Exclude '<' and '>' to avoid conflicts
+  | <XML_DECLARATION: "<?xml" (~["?"])* "?>" > // Added XML_DECLARATION token
+}
+
+// Grammar rules
+JSONObject document() :
+{
+    JSONObject json = new JSONObject();
+}
+{
+    (LOOKAHEAD(2) xmlDeclaration())? // Check if an XML declaration is present
+    json = element() // Parse the root element
+    <EOF> // Check for end of file
+    {
+        if (json == null) {
+            throw new ParseException("Invalid XML: Root element is missing or malformed.");
+        }
+        return json;
+    }
+}
+
+void xmlDeclaration() :
+{}
+{
+    <XML_DECLARATION>
+}
+
+JSONObject element() :
+{
+    JSONObject json = new JSONObject();
+    Token name;
+    JSONArray children = new JSONArray();
+    String textContent = "";
+}
+{
+    <OPEN_TAG>
+    name = <NAME>
+    (
+        attribute() // Parse attributes
+        {
+            json.put("attributes", attribute());
+        }
+    )*
+    <CLOSE_TAG>
+    (
+        textContent = text() { 
+            json.put("content", textContent);
+        }
+    |
+        children = content() {
+            json.put("children", children);
+        }
+    )
+    <OPEN_CLOSE_TAG> <NAME> <CLOSE_TAG>
+    { 
+        json.put("name", name.image);
+        return json; 
+    }
+}
+
+JSONObject attribute() :
+{
+    JSONObject attr = new JSONObject();
+    Token name;
+    Token value;
+}
+{
+    name = <NAME>
+    <EQUALS>
+    value = <VALUE>
+    {
+        attr.put(name.image, value.image.substring(1, value.image.length() - 1)); // Remove quotes
+        return attr;
+    }
+}
+
+JSONArray content() :
+{
+    JSONArray contentArray = new JSONArray(); // Liste pour accumuler les résultats
+    JSONObject childElement;
+    String textContent;
+}
+{
+    (
+        childElement = element() // Parse un élément enfant
+        {
+            contentArray.put(childElement); // Ajouter l'élément à la liste
+        }
+    |
+        textContent = text() // Parse le texte
+        {
+            if (textContent != null && !textContent.isEmpty()) { // Ne pas ignorer si le texte est "123" sans espace
+                contentArray.put(textContent);
+            }
+        }
+    |
+        <COMMENT> // Ignorer les commentaires
+    |
+        <CDATA> // Traiter les sections CDATA comme du texte
+        {
+            contentArray.put(token.image); // Ajouter le CDATA à la liste
+        }
+    )*
+    { return contentArray; } // Retourner la liste accumulée
+}
+
+String text() :
+{
+    Token text;
+}
+{
+    text = <TEXT>
+    { 
+        return text.image.trim(); // Trim unnecessary spaces
+    }
+}

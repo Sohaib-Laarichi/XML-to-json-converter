@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>XMLtoJSONConverter</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>XMLtoJSONConverter</name>
+
+  <dependencies>
+    <!-- Pour JSON -->
+    <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20231013</version>
+    </dependency>
+      <!-- Dépendance JavaCC -->
+    <dependency>
+        <groupId>net.java.dev.javacc</groupId>
+        <artifactId>javacc</artifactId>
+        <version>7.0.10</version>
+    </dependency>
+
+    <!-- Pour XML (pour Java 8 ou plus ancien) -->
+  </dependencies>
+  <build>
+    <plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>javacc-maven-plugin</artifactId>
+            <version>2.6</version>
+            <executions>
+                <execution>
+                    <id>javacc</id>
+                    <goals>
+                        <goal>javacc</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+</project>

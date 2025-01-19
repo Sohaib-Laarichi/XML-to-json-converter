@@ -1,0 +1,22 @@
+<hotel>
+    <name>Grand Hotel</name>
+    <location>
+        <city>Paris</city>
+        <country>France</country>
+    </location>
+    <rooms>
+        <room>
+            <type>Single</type>
+            <price>100</price>
+        </room>
+        <room>
+            <type>Double</type>
+            <price>150</price>
+        </room>
+    </rooms>
+    <amenities>
+        <amenity>WiFi</amenity>
+        <amenity>Swimming Pool</amenity>
+        <amenity>Breakfast</amenity>
+    </amenities>
+</hotel>

@@ -1,0 +1,119 @@
+options {
+    STATIC = true;
+    OUTPUT_DIRECTORY = "src/xml_json";
+}
+
+PARSER_BEGIN(XmlToJsonParser)
+package xml_json;
+
+import org.json.JSONObject;
+import java.util.Stack;
+
+/** The parser for converting XML to JSON */
+public class XmlToJsonParser {
+    private Stack<JSONObject> stack = new Stack<>();
+    private JSONObject currentObject;
+
+    public static void main(String[] args) throws ParseException {
+        XmlToJsonParser parser = new XmlToJsonParser(System.in);
+        parser.parse();
+    }
+
+    public void startObject(String key) {
+        JSONObject newObject = new JSONObject();
+        if (currentObject != null) {
+            currentObject.put(key, newObject);
+        }
+        stack.push(currentObject);
+        currentObject = newObject;
+    }
+
+    public void endObject() {
+        currentObject = stack.pop();
+    }
+
+    public void addAttribute(String key, String value) {
+        currentObject.put("@" + key, value);
+    }
+
+    public void addText(String text) {
+        currentObject.put("#text", text.trim());
+    }
+
+    public void printJson() {
+        System.out.println(currentObject.toString(4));
+    }
+}
+PARSER_END(XmlToJsonParser)
+
+SKIP : {
+    " " | "\t" | "\n" | "\r"
+}
+
+TOKEN : {
+    < OPEN_TAG: "<" > |
+    < END_TAG: "</" > |
+    < CLOSE_TAG: ">" > |
+    < SELF_CLOSING_TAG: "/>" > |
+    < EQUAL: "=" > |
+    < IDENTIFIER: (<LETTER>)+ > |
+    < STRING: "\"" (~["\""])* "\"" > |
+    < TEXT: (~["<", ">"])+ >
+}
+
+MORE : {
+    < LETTER: ["a"-"z", "A"-"Z", "0"-"9", "_"] >
+}
+
+void parse() : {} {
+    jsonObject() {
+        printJson();
+    }
+}
+
+void jsonObject() : {} {
+    <OPEN_TAG>
+    <IDENTIFIER> {
+        startObject(token.image);
+    }
+    attributes()
+    (
+        <CLOSE_TAG>
+        elements()
+        <END_TAG>
+        <IDENTIFIER> {
+            if (!token.image.equals(token.image)) {
+                throw new ParseException("Mismatched closing tag: " + token.image);
+            }
+        }
+        <CLOSE_TAG> {
+            endObject();
+        }
+        |
+        <SELF_CLOSING_TAG> {
+            endObject();
+        }
+    )
+}
+
+void attributes() : {
+    boolean first = true;
+} {
+    (
+        <IDENTIFIER> <EQUAL> <STRING> {
+            addAttribute(token.image, token.next.image);
+        }
+    )*
+}
+
+void elements() : {
+    boolean first = true;
+} {
+    (
+        jsonObject()
+        |
+        <TEXT> {
+            addText(token.image);
+        }
+    )*
+}

@@ -1,0 +1,97 @@
+package com.example.xmltojson.model;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
+public class XMLParser {
+
+    public String parseXMLToJSON(File xmlFile) throws Exception {
+        // Créer un parseur de document XML
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(xmlFile);
+        document.getDocumentElement().normalize();
+
+        // Convertir l'élément racine en JSON
+        Element root = document.getDocumentElement();
+        Map<String, Object> jsonMap = new HashMap<>();
+        jsonMap.put(root.getNodeName(), parseElement(root));
+
+        return convertMapToJSON(jsonMap);
+    }
+
+    private Object parseElement(Element element) {
+        Map<String, Object> elementMap = new HashMap<>();
+        NodeList children = element.getChildNodes();
+
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element childElement = (Element) node;
+                String nodeName = childElement.getNodeName();
+                if (elementMap.containsKey(nodeName)) {
+                    Object existingValue = elementMap.get(nodeName);
+                    if (existingValue instanceof java.util.List) {
+                        ((java.util.List) existingValue).add(parseElement(childElement));
+                    } else {
+                        java.util.List<Object> list = new java.util.ArrayList<>();
+                        list.add(existingValue);
+                        list.add(parseElement(childElement));
+                        elementMap.put(nodeName, list);
+                    }
+                } else {
+                    elementMap.put(nodeName, parseElement(childElement));
+                }
+            } else if (node.getNodeType() == Node.TEXT_NODE && !node.getTextContent().trim().isEmpty()) {
+                return node.getTextContent().trim();
+            }
+        }
+
+        return elementMap;
+    }
+
+    private String convertMapToJSON(Map<String, Object> map) {
+        StringBuilder json = new StringBuilder("{");
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            json.append("\"").append(entry.getKey()).append("\":");
+            if (entry.getValue() instanceof Map) {
+                json.append(convertMapToJSON((Map<String, Object>) entry.getValue()));
+            } else if (entry.getValue() instanceof java.util.List) {
+                json.append(convertListToJSON((java.util.List) entry.getValue()));
+            } else {
+                json.append("\"").append(entry.getValue()).append("\"");
+            }
+            json.append(",");
+        }
+        if (json.charAt(json.length() - 1) == ',') {
+            json.deleteCharAt(json.length() - 1);
+        }
+        json.append("}");
+        return json.toString();
+    }
+
+    private String convertListToJSON(java.util.List<Object> list) {
+        StringBuilder json = new StringBuilder("[");
+        for (Object item : list) {
+            if (item instanceof Map) {
+                json.append(convertMapToJSON((Map<String, Object>) item));
+            } else {
+                json.append("\"").append(item).append("\"");
+            }
+            json.append(",");
+        }
+        if (json.charAt(json.length() - 1) == ',') {
+            json.deleteCharAt(json.length() - 1);
+        }
+        json.append("]");
+        return json.toString();
+    }
+}

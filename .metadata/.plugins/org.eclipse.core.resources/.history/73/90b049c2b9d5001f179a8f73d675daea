@@ -1,0 +1,12 @@
+package snippet;
+
+public class Snippet {
+	options {
+	    STATIC = true;
+	    OUTPUT_DIRECTORY = "src/xml_json";
+	}
+	
+	PARSER_BEGIN(XmlToJsonParser)
+	
+}
+

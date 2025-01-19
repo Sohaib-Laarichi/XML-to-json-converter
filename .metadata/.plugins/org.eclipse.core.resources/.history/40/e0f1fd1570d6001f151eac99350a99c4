@@ -1,0 +1,127 @@
+package com.example.ui;
+
+import com.example.parser.XMLParser;
+import org.json.JSONObject;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
+
+public class XMLToJSONConverterUI extends JFrame {
+    private JTextArea xmlTextArea;
+    private JTextArea jsonTextArea;
+    private JButton loadButton;
+    private JButton convertButton;
+    private JButton saveButton;
+
+    public XMLToJSONConverterUI() {
+        setTitle("XML to JSON Converter");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Créer les composants
+        xmlTextArea = new JTextArea();
+        jsonTextArea = new JTextArea();
+        loadButton = new JButton("Load XML File");
+        convertButton = new JButton("Convert to JSON");
+        saveButton = new JButton("Save JSON");
+
+        // Ajouter des écouteurs d'événements
+        loadButton.addActionListener(new LoadButtonListener());
+        convertButton.addActionListener(new ConvertButtonListener());
+        saveButton.addActionListener(new SaveButtonListener());
+
+        // Créer un panneau pour les boutons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(loadButton);
+        buttonPanel.add(convertButton);
+        buttonPanel.add(saveButton);
+
+        // Créer un panneau pour les zones de texte
+        JPanel textPanel = new JPanel(new GridLayout(1, 2));
+        textPanel.add(new JScrollPane(xmlTextArea));
+        textPanel.add(new JScrollPane(jsonTextArea));
+
+        // Ajouter les composants à la fenêtre
+        add(buttonPanel, BorderLayout.NORTH);
+        add(textPanel, BorderLayout.CENTER);
+    }
+
+    private class LoadButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JFileChooser fileChooser = new JFileChooser();
+            int returnValue = fileChooser.showOpenDialog(null);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                try {
+                    // Lire le fichier XML et l'afficher dans la zone de texte
+                    String xmlContent = new String(java.nio.file.Files.readAllBytes(selectedFile.toPath()));
+                    xmlTextArea.setText(xmlContent);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "Error loading file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+    }
+
+    private class ConvertButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String xmlContent = xmlTextArea.getText();
+            if (xmlContent.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Please load an XML file first.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                // Convertir le XML en JSON
+                XMLParser parser = new XMLParser(new java.io.ByteArrayInputStream(xmlContent.getBytes()));
+                JSONObject json = parser.document();
+                jsonTextArea.setText(json.toString(2)); // Afficher le JSON formaté
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Error converting XML to JSON: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private class SaveButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String jsonContent = jsonTextArea.getText();
+            if (jsonContent.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "No JSON content to save.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save JSON File");
+            int userSelection = fileChooser.showSaveDialog(null);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                try (FileOutputStream fos = new FileOutputStream(fileToSave)) {
+                    fos.write(jsonContent.getBytes(StandardCharsets.UTF_8));
+                    JOptionPane.showMessageDialog(null, "File saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "Error saving file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+    }
+
+    public static void launchUI() {
+        SwingUtilities.invokeLater(() -> {
+            XMLToJSONConverterUI ui = new XMLToJSONConverterUI();
+            ui.setVisible(true);
+        });
+    }
+
+    public static void main(String[] args) {
+        launchUI();
+    }
+}

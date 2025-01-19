@@ -1,0 +1,135 @@
+options {
+    STATIC = false;
+    UNICODE_INPUT = true;
+}
+
+PARSER_BEGIN(XMLParser)
+package convertir;
+
+import java.io.*;
+import java.util.*;
+
+public class XMLParser {
+    private StringBuilder jsonOutput;
+
+    public String getJSON() {
+        return jsonOutput.toString();
+    }
+}
+PARSER_END(XMLParser)
+
+// Définition des caractères à ignorer - TRÈS IMPORTANT
+SKIP : {
+    " "
+|   "\t"
+|   "\n"
+|   "\r"
+|   "\f"
+}
+
+// Définition des tokens
+TOKEN : {
+    < OPEN_TAG: "<" >
+|   < CLOSE_TAG: ">" >
+|   < SLASH: "/" >
+|   < BIBLIO: "biblio" >
+|   < LIVRE: "livre" >
+|   < NUMERO: "numero" >
+|   < TITRE: "titre" >
+|   < AUTEUR: "auteur" >
+|   < EDITEUR: "editeur" >
+|   < PRIX: "prix" >
+|   < TEXT: (["0"-"9", "a"-"z", "A"-"Z", " ", ".", ",", "-", "_"])+ >
+}
+
+void parse() : {}
+{
+    {
+        jsonOutput = new StringBuilder();
+    }
+    document()
+    <EOF>
+}
+
+void document() : {}
+{
+    biblio()
+}
+
+void biblio() : {}
+{
+    startBiblio()
+    (LOOKAHEAD(2) livre())*
+    endBiblio()
+}
+
+void startBiblio() : {}
+{
+    <OPEN_TAG> <BIBLIO> <CLOSE_TAG>
+    {
+        jsonOutput.append("{\n  \"biblio\": {\n    \"livre\": [\n");
+    }
+}
+
+void endBiblio() : {}
+{
+    <OPEN_TAG> <SLASH> <BIBLIO> <CLOSE_TAG>
+    {
+        if (jsonOutput.length() > 2 && jsonOutput.charAt(jsonOutput.length() - 2) == ',') {
+            jsonOutput.setLength(jsonOutput.length() - 2);
+            jsonOutput.append("\n");
+        }
+        jsonOutput.append("    ]\n  }\n}");
+    }
+}
+
+void livre() : {}
+{
+    <OPEN_TAG> <LIVRE> <CLOSE_TAG>
+    {
+        jsonOutput.append("      {\n");
+    }
+    (LOOKAHEAD(2) element())*
+    <OPEN_TAG> <SLASH> <LIVRE> <CLOSE_TAG>
+    {
+        if (jsonOutput.charAt(jsonOutput.length() - 2) == ',') {
+            jsonOutput.setLength(jsonOutput.length() - 2);
+            jsonOutput.append("\n");
+        }
+        jsonOutput.append("      },\n");
+    }
+}
+
+void element() : {
+    Token tagName;
+    Token content;
+}
+{
+    <OPEN_TAG>
+    (
+        tagName = <NUMERO>
+    |   tagName = <TITRE>
+    |   tagName = <AUTEUR>
+    |   tagName = <EDITEUR>
+    |   tagName = <PRIX>
+    )
+    <CLOSE_TAG>
+    content = <TEXT>
+    <OPEN_TAG>
+    <SLASH>
+    (
+        <NUMERO>
+    |   <TITRE>
+    |   <AUTEUR>
+    |   <EDITEUR>
+    |   <PRIX>
+    )
+    <CLOSE_TAG>
+    {
+        jsonOutput.append("        \"")
+                 .append(tagName.image)
+                 .append("\": \"")
+                 .append(content.image.trim())
+                 .append("\",\n");
+    }
+}
